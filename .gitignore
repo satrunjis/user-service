@@ -1,0 +1,5 @@
+*.vscode
+docs/
+config.yaml
+*.http
+bin/
