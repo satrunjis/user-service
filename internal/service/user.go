@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var validSortBy = map[string]bool{"login": true, "reg_date": true}
+
 const cost = 10
 
 const (
@@ -55,7 +57,7 @@ func (s *UserService) SearchUsers(ctx context.Context, filters *domain.UserFilte
 	if filters != nil && filters.Size != nil && (*filters.Size <= 0 || *filters.Size > 100) {
 		*filters.Size = 50
 	}
-
+	
 	users, err := s.userRepo.Search(ctx, filters)
 	if err != nil {
 		return nil, mapRepositoryError(err, "search")

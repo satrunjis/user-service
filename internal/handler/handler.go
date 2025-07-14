@@ -60,7 +60,7 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 			userVals[i] = *u
 		}
 	}
-	h.logger.Debug("Filtered users", "filters", filters.String())
+	//h.logger.Debug("Filtered users", "filters", filters.String())
 
 	c.JSON(http.StatusOK, UserListResponse{Users: userVals, Total: len(userVals)})
 }

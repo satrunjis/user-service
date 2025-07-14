@@ -11,7 +11,7 @@ import (
 
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Next() // Выполняем цепочку обработчиков
+		c.Next() 
 		if len(c.Errors) > 0 && !c.Writer.Written() {
 			err := c.Errors.Last().Err
 

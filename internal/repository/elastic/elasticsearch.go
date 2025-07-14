@@ -19,14 +19,14 @@ const usersIndex = "users"
 const mappings = `{
   "mappings": {
     "properties": {
-      "login":               {"type": "text", "fields": {"keyword": { "type": "keyword"} } },
-      "username":            {"type": "text", "fields": {"keyword": { "type": "keyword"} } },
+      "login":               {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
+      "username":            {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
       "password":            {"type": "keyword"},
-      "description":         {"type": "text", "fields": {"keyword": { "type": "keyword"} } },
-      "comment":             {"type": "text", "fields": {"keyword": { "type": "keyword"} } },
+      "description":         {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
+      "comment":             {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
       "reg_date":            {"type": "date"},
       "location":            {"type": "geo_point"},
-      "social_network_type": {"type": "keyword"}
+      "social_net":          {"type": "keyword"}
     }
   }
 }`
@@ -333,7 +333,7 @@ func (e *Elastic) Search(ctx context.Context, filters *domain.UserFilter) ([]*do
 	log.DebugContext(ctx, "searching users", "filters", (*filters).String())
 	start := time.Now()
 
-	reader, err := buildElasticsearchQuery(filters)
+	reader, err := e.buildElasticsearchQuery(filters)
 	if err != nil {
 		log.ErrorContext(ctx, "failed to build query", "error", err)
 		return nil, service.NewServiceError(service.ErrCodeInternal)
@@ -407,7 +407,7 @@ func shoveTheId(hits []elasticHit) []*domain.User {
 	return users
 }
 
-func buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
+func (e *Elastic) buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
 	query := map[string]any{
 		"query": map[string]any{
 			"bool": map[string]any{
@@ -435,15 +435,15 @@ func buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
 	if f.DateFrom != nil || f.DateTo != nil {
 		rangeFilter := map[string]any{
 			"range": map[string]any{
-				"registration_date": map[string]any{},
+				"reg_date": map[string]any{},
 			},
 		}
 
 		if f.DateFrom != nil {
-			rangeFilter["range"].(map[string]any)["registration_date"].(map[string]any)["gte"] = f.DateFrom.Format(time.RFC3339)
+			rangeFilter["range"].(map[string]any)["reg_date"].(map[string]any)["gte"] = f.DateFrom.Format(time.RFC3339)
 		}
 		if f.DateTo != nil {
-			rangeFilter["range"].(map[string]any)["registration_date"].(map[string]any)["lte"] = f.DateTo.Format(time.RFC3339)
+			rangeFilter["range"].(map[string]any)["reg_date"].(map[string]any)["lte"] = f.DateTo.Format(time.RFC3339)
 		}
 
 		mustQueries = append(mustQueries, rangeFilter)
@@ -463,7 +463,7 @@ func buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
 	if f.SocialType != nil && *f.SocialType != "" {
 		socialTypeFilter := map[string]any{
 			"term": map[string]any{
-				"social_type": *f.SocialType,
+				"social_net": *f.SocialType,
 			},
 		}
 		mustQueries = append(mustQueries, socialTypeFilter)
@@ -476,6 +476,7 @@ func buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
 		query["query"].(map[string]any)["bool"].(map[string]any)["must"] = mustQueries
 	}
 	if f.SortBy != nil && *f.SortBy != "" {
+
 		sortOrder := "asc"
 		if f.SortOrder != nil && *f.SortOrder == "desc" {
 			sortOrder = "desc"
@@ -510,5 +511,9 @@ func buildElasticsearchQuery(f *domain.UserFilter) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	e.logger.Debug( "searching users", "filters for bd", string(b))
+
+
 	return bytes.NewReader(b), nil
 }
