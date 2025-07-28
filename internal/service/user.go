@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var validSortBy = map[string]bool{"login": true, "reg_date": true}
-
 const cost = 10
 
 const (

@@ -16,12 +16,23 @@ COPY . .
 
 RUN go build -o user-service ./cmd/main.go
 
-FROM alpine:latest
+FROM alpine:3.22.1
+RUN adduser -S appuser
+
 WORKDIR /app
-RUN mkdir cmd
-COPY --from=builder /app/user-service ./cmd/
-COPY --from=builder /app/docs ./docs
-RUN if [ -f config.yaml ]; then cp config.yaml . ; fi
-COPY docker-compose.yaml .
+
+COPY --from=builder --chown=appuser:appuser /app/user-service ./cmd/
+COPY --from=builder --chown=appuser:appuser /app/docs ./docs
+
+RUN if [ -f config.yaml ]; then cp config.yaml . ; fi && \
+    chown appuser:appuser config.yaml 2>/dev/null || true
+
+COPY --chown=appuser:appuser docker-compose.yaml .
+
+RUN chmod 550 ./cmd/user-service
+
+USER appuser
+
+USER appuser
 EXPOSE 8080
 CMD ["./cmd/user-service"]

@@ -1,6 +1,9 @@
 package service
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 type ErrorCode string
 
@@ -30,7 +33,8 @@ func NewServiceError(code ErrorCode, messages ...string) *ServiceError {
 
 func mapRepositoryError(err error, operation string) error {
 	_ = operation
-	if serviceErr, ok := err.(*ServiceError); ok {
+	var serviceErr *ServiceError
+	if errors.As(err, &serviceErr) {
 		switch serviceErr.Code {
 		case ErrCodeNotFound:
 			return NewServiceError(ErrCodeNotFound, "User not found")
